@@ -128,7 +128,7 @@ def record(driver):
     like_list = []
     first_vidoe(driver=driver)
     
-    for _ in range(3):
+    for _ in range(10):
         first_ad, second_ad = ad_skip(driver=driver)
         first_ad_list.append(first_ad)
         second_ad_list.append(second_ad)
