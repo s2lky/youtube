@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from fake_useragent import UserAgent
 
 
-def first_vidoe(driver):
+def first_video(driver):
     value = '안녕하세요'
     driver.get(f'https://www.youtube.com/results?search_query={value}')
 
@@ -126,7 +126,7 @@ def record(driver):
     first_ad_list = []
     second_ad_list = []
     like_list = []
-    first_vidoe(driver=driver)
+    first_video(driver=driver)
     
     for _ in range(10):
         first_ad, second_ad = ad_skip(driver=driver)
