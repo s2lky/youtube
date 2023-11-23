@@ -21,7 +21,7 @@ class YouTubeBot:
         chrome_options = Options()
         ua = UserAgent()
         user_agent = ua.random
-        chrome_options.add_argument('--headless')
+        # chrome_options.add_argument('--headless')
         chrome_options.add_argument('--window-size=1920,1080')
         chrome_options.add_argument(f'user-agent={user_agent}')
         chrome_options.add_argument("--disable-gpu")
@@ -72,7 +72,8 @@ class YouTubeBot:
 
     def video_len(self):
         # 정규표현식을 사용하여 시, 분, 초 추출
-        time_str = self.driver.find_element(By.CLASS_NAME, 'ytp-time-duration')
+        time.sleep(1)
+        time_str = self.driver.find_element(By.CLASS_NAME, 'notranslate').find_element(By.CLASS_NAME, 'ytp-time-duration').text
         match = re.match(r'(?:(\d+):)?(\d+):(\d+)', time_str)
         
         if match:
@@ -236,16 +237,16 @@ class YouTubeBot:
     
     # @profile
     def run(self):
-        try:
-            result_df = self.record()  # Capture the returned DataFrame
-            return result_df
-        except Exception as e:
-            error_message = f"An error occurred: {e}"
-            print(error_message)
-            # If you want to log the error to a file, you can use the following line instead
-            # with open("error_log.txt", "a") as f:
-            #     f.write(f"{error_message}\n")
-            raise YouTubeBotError(error_message) from e
+        # try:
+        result_df = self.record()  # Capture the returned DataFrame
+        return result_df
+        # except Exception as e:
+        #     error_message = f"An error occurred: {e}"
+        #     print(error_message)
+        #     # If you want to log the error to a file, you can use the following line instead
+        #     # with open("error_log.txt", "a") as f:
+        #     #     f.write(f"{error_message}\n")
+        #     raise YouTubeBotError(error_message) from e
 
     def cleanup(self):
         self.driver.quit()

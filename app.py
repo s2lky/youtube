@@ -11,7 +11,7 @@ if __name__ == "__main__":
         bot.cleanup()
         table_name = "crawl" 
         insert_db(df=result_df, table_name=table_name)
-        print("Script executed successfully.")
+        print("Script executed successfully")
     except YouTubeBotError as e:
         print(f"Custom error raised: {e}")
     except Exception as e:
