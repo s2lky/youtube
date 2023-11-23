@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+  remote_selenium:
+    platform: linux/amd64
+    container_name: remote_selenium
+    image: mine:0.1
+    shm_size: 2gb
+    ports:
+      - 4444:4444
+    restart: always
+    networks:
+      - our_net
+
+networks:
+  our_net:
+    driver: bridge
