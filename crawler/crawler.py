@@ -237,16 +237,16 @@ class YouTubeBot:
     
     # @profile
     def run(self):
-        # try:
-        result_df = self.record()  # Capture the returned DataFrame
-        return result_df
-        # except Exception as e:
-        #     error_message = f"An error occurred: {e}"
-        #     print(error_message)
-        #     # If you want to log the error to a file, you can use the following line instead
-        #     # with open("error_log.txt", "a") as f:
-        #     #     f.write(f"{error_message}\n")
-        #     raise YouTubeBotError(error_message) from e
+        try:
+            result_df = self.record()  # Capture the returned DataFrame
+            return result_df
+        except Exception as e:
+            error_message = f"An error occurred: {e}"
+            print(error_message)
+            # If you want to log the error to a file, you can use the following line instead
+            # with open("error_log.txt", "a") as f:
+            #     f.write(f"{error_message}\n")
+            raise YouTubeBotError(error_message) from e
 
     def cleanup(self):
         self.driver.quit()
