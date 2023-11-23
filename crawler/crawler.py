@@ -8,7 +8,7 @@ import random
 from fake_useragent import UserAgent
 from datetime import datetime
 import re
-from memory_profiler import profile
+# from memory_profiler import profile
 
 class YouTubeBotError(Exception):
     pass
@@ -21,20 +21,21 @@ class YouTubeBot:
         chrome_options = Options()
         ua = UserAgent()
         user_agent = ua.random
+        chrome_options.add_argument('--headless')
         chrome_options.add_argument('--window-size=1920,1080')
         chrome_options.add_argument(f'user-agent={user_agent}')
         chrome_options.add_argument("--disable-gpu")
         return Chrome(chrome_options)
 
     def get_random_persona(self):
-        df = pd.read_csv('../data/persona_data.csv')
+        df = pd.read_csv('/usr/src/data/persona_data.csv')
         value = random.randint(0, (len(df) - 1))
         name = df.iloc[value]['페르소나 이름']
         keyword = random.choice((df.loc[value]['키워드']).split(", "))
         return name, keyword
 
     def first_video(self, keyword):
-        self.driver.get('https://www.youtube.com/')    
+        self.driver.get('https://www.youtube.com/')
         time.sleep(5)
         self.driver.find_element(By.ID, 'search-form').find_element(By.ID, 'search').send_keys(f'{keyword}')
         time.sleep(0.3)
@@ -69,10 +70,35 @@ class YouTubeBot:
         except:
             self.driver.execute_script("arguments[0].click();", element)
 
+    def video_len(self):
+        # 정규표현식을 사용하여 시, 분, 초 추출
+        time.sleep(1)
+        time_str = self.driver.find_element(By.CLASS_NAME, 'notranslate').find_element(By.CLASS_NAME, 'ytp-time-duration').text
+        match = re.match(r'(?:(\d+):)?(\d+):(\d+)', time_str)
+        
+        if match:
+            groups = match.groups()
+            hours = int(groups[0]) if groups[0] is not None else 0
+            minutes = int(groups[1])
+            seconds = int(groups[2])
+            
+            total_seconds = hours * 3600 + minutes * 60 + seconds
+            return total_seconds
+        else:
+            # 매치되지 않을 경우 예외 처리 또는 기본값 설정
+            print(f"올바른 시간 형식이 아닙니다: {time_str}")
+            return None
+
     def user_session(self):
-        viewing_time = random.randint(1, 10)
+        viewing_time = (random.randint(1, 10) * 60)
+        print(viewing_time)
+        video_time = self.video_len()
+        if video_time > viewing_time:
+            pass
+        else:
+            viewing_time = video_time
         start_time = time.time()
-        while (time.time() - start_time) < (viewing_time * 60):
+        while (time.time() - start_time) < viewing_time:
             try:
                 ad_site = self.driver.find_element(By.CLASS_NAME, 'ytp-ad-visit-advertiser-button').find_element(By.CLASS_NAME, 'ytp-ad-button-text').text
                 print("ad_site : ", ad_site)
@@ -109,7 +135,7 @@ class YouTubeBot:
             viewership = ''.join(filter(str.isdigit, viewership))
             text = self.driver.find_element(By.XPATH, '//*[@id="info"]/span[3]').text
             if "최초" in text or "스트리밍" in text:
-                pattern = r'(\d{4}\. \d{2}\. \d{2})'
+                pattern = r'(\d{4}\. \d{1,2}\. \d{1,2})'
                 match = re.search(pattern, text)
                 uploaded_date = datetime.strptime(match.group(1), "%Y. %m. %d")
             else:
@@ -119,13 +145,14 @@ class YouTubeBot:
             viewership = ''.join(filter(str.isdigit, view_date_upclass.find_element(By.ID, 'view-count').get_attribute('aria-label').strip()))
             text = view_date_upclass.find_element(By.ID, 'info').find_element(By.TAG_NAME, 'span').text
             if "최초" in text or "스트리밍" in text:
-                pattern = r'(\d{4}\. \d{2}\. \d{2})'
+                pattern = r'(\d{4}\. \d{1,2}\. \d{1,2})'
                 match = re.search(pattern, text)
                 uploaded_date = datetime.strptime(match.group(1), "%Y. %m. %d")
             else:
                 uploaded_date = datetime.strptime(view_date_upclass.find_element(By.ID, 'info').find_element(By.TAG_NAME, 'span').text, "%Y. %m. %d.")
         describe = self.driver.find_element(By.XPATH, '//*[@id="description-inline-expander"]/yt-attributed-string').text
         current_url = self.driver.current_url
+        print(current_url)
         like = ''.join(filter(str.isdigit, self.driver.find_element(By.CLASS_NAME, 'yt-spec-button-shape-next--segmented-start').get_attribute('aria-label')))
         if len(like) == 0:
             like = None
@@ -204,9 +231,11 @@ class YouTubeBot:
                         'like': like_list, 'url': url_list, 'first_ad': first_ad_list, 'second_ad': second_ad_list}
         df = pd.DataFrame(youtube_data)
         
+        df.to_csv('./youtube_bot_log.csv', index=False)
+        
         return df
     
-    @profile    
+    # @profile
     def run(self):
         try:
             result_df = self.record()  # Capture the returned DataFrame
@@ -228,3 +257,4 @@ if __name__ == "__main__":
     result_df = bot.run()  # Save the returned DataFrame as a variable
     bot.cleanup()
     
+

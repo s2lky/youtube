@@ -15,3 +15,6 @@ RUN sudo apt install pip -y
 
 # 파이썬 라이브러리 설치
 RUN pip install -r requirements.txt
+
+CMD ["python3", "app.py"]
+
