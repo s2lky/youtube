@@ -28,7 +28,7 @@ class YouTubeBot:
         return Chrome(chrome_options)
 
     def get_random_persona(self):
-        df = pd.read_csv('/Users/a13/Documents/vsc_file/team07_with_company/data/persona_data.csv')
+        df = pd.read_csv('/usr/src/data/persona_data.csv')
         value = random.randint(0, (len(df) - 1))
         name = df.iloc[value]['페르소나 이름']
         keyword = random.choice((df.loc[value]['키워드']).split(", "))
@@ -166,7 +166,7 @@ class YouTubeBot:
 
     def user_session(self):
         time.sleep(0.5)
-        viewing_time = (random.randint(1, 10)) * 1
+        viewing_time = (random.randint(1, 10)) * 60
         video_time = self.video_len()
         if video_time > viewing_time or video_time == 0:
             pass
