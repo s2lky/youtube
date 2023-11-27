@@ -10,6 +10,8 @@ from datetime import datetime
 import re
 # from memory_profiler import profile
 
+
+
 class YouTubeBotError(Exception):
     pass
 
@@ -21,14 +23,14 @@ class YouTubeBot:
         chrome_options = Options()
         ua = UserAgent()
         user_agent = ua.random
-        chrome_options.add_argument('--headless')
-        chrome_options.add_argument('--window-size=1920,1080')
+        # chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--window-size=1080,1080')
         chrome_options.add_argument(f'user-agent={user_agent}')
         chrome_options.add_argument("--disable-gpu")
         return Chrome(chrome_options)
 
     def get_random_persona(self):
-        df = pd.read_csv('/usr/src/data/persona_data.csv')
+        df = pd.read_csv('/Users/a13/Documents/vsc_file/team07_with_company/data/persona_data.csv')
         value = random.randint(0, (len(df) - 1))
         name = df.iloc[value]['페르소나 이름']
         keyword = random.choice((df.loc[value]['키워드']).split(", "))
@@ -77,15 +79,37 @@ class YouTubeBot:
                 break
                 
 
-# 영상을 한 개만 봤을 때, 메인 페이지에 키워드와 관련된 영상이 별로 보이지 않음. 더군다나 짧게 보면 더 안보이게 되기 때문에 첫 영상에서 옆에 뜨는 관련영상을 시청하게 함
+    # 영상을 한 개만 봤을 때, 메인 페이지에 키워드와 관련된 영상이 별로 보이지 않음. 더군다나 짧게 보면 더 안보이게 되기 때문에 첫 영상에서 옆에 뜨는 관련영상을 시청하게 함
     def next_video(self):
-        next_video_up_class = self.driver.find_element(By.ID, 'related')
-        next_videos = next_video_up_class.find_elements(By.TAG_NAME, 'ytd-compact-video-renderer')
-        next_video_random_click = random.randint(0, (len(next_videos) - 1))
         try:
-            next_videos[next_video_random_click].click()
+            try:
+                popup = self.driver.find_element(By.TAG_NAME, 'tp-yt-paper-dialog')
+                popup.find_element(By.ID, 'dismiss-button').click()
+            except:
+                pass
+            self.driver.find_element(By.CLASS_NAME, 'ytp-left-controls').find_element(By.CLASS_NAME, 'ytp-play-button').click()
+            time.sleep(random.uniform(0.5, 1))
+            next_video_up_class = self.driver.find_element(By.ID, 'related')
+            next_videos = next_video_up_class.find_elements(By.TAG_NAME, 'ytd-compact-video-renderer')
+            next_video_random_click = random.randint(0, (len(next_videos) - 1))
+            try:
+                next_videos[next_video_random_click].click()
+            except:
+                self.driver.execute_script("arguments[0].click();", next_videos[next_video_random_click])
         except:
-            self.driver.execute_script("arguments[0].click();", next_videos[next_video_random_click])
+            # next_video 작업이 실패할 경우 main_page에서 video를 select하게
+            self.driver.find_element(By.XPATH, '/html/body/ytd-app/div[1]/div/ytd-masthead/div[4]/div[1]/ytd-topbar-logo-renderer').click()
+            time.sleep(random.uniform(5, 6))
+            video_list = self.driver.find_elements(By.TAG_NAME, 'ytd-rich-grid-row')
+            random_number = random.randint(0, (len(video_list) - 1))
+            youtube_to_click = video_list[random_number].find_elements(By.ID, 'thumbnail')
+            random_number = random.randint(0, (len(youtube_to_click) - 1))
+            element = youtube_to_click[random_number]
+            print("next_videos요소를 찾지 못했습니다.")
+            try:
+                element.click()
+            except:
+                self.driver.execute_script("arguments[0].click();", element)
         
         # next_videos = self.driver.find_elements(By.TAG_NAME, 'ytd-compact-video-renderer')
         # random_number = random.randint(0, (len(next_videos) - 1))
@@ -116,17 +140,17 @@ class YouTubeBot:
 
     def video_len(self):
         # 정규표현식을 사용하여 시, 분, 초 추출
-        time.sleep(3)
+        time.sleep(3.5)
         try:
             popup = self.driver.find_element(By.TAG_NAME, 'tp-yt-paper-dialog')
             popup.find_element(By.ID, 'dismiss-button').click()
         except:
             pass
-        self.driver.find_element(By.CLASS_NAME, 'ytp-play-button').click()
+        self.driver.find_element(By.CLASS_NAME, 'ytp-left-controls').find_element(By.CLASS_NAME, 'ytp-play-button').click()
         time.sleep(random.uniform(0.15, 0.2))
         time_str = self.driver.find_element(By.CLASS_NAME, 'notranslate').find_element(By.CLASS_NAME, 'ytp-time-duration').text
         time.sleep(random.uniform(0.15, 0.2))
-        self.driver.find_element(By.CLASS_NAME, 'ytp-play-button').click()
+        self.driver.find_element(By.CLASS_NAME, 'ytp-left-controls').find_element(By.CLASS_NAME, 'ytp-play-button').click()
         print(time_str)
         if len(time_str) == 0:
             return 0
@@ -236,11 +260,12 @@ class YouTubeBot:
         return title, channel_name, viewership, uploaded_date, describe, current_url, like
 
     def ad_skip(self):
-        time.sleep(random.uniform(1.7, 2))
+        time.sleep(random.uniform(2.3, 2.5))
         try:
             ad_site = None
             ad_site2 = None
-            ad_site = self.driver.find_element(By.CLASS_NAME, 'ytp-ad-visit-advertiser-button').find_element(By.CLASS_NAME, 'ytp-ad-button-text').text
+            # ad_site = self.driver.find_element(By.CLASS_NAME, 'ytp-ad-visit-advertiser-button').find_element(By.CLASS_NAME, 'ytp-ad-button-text').text
+            ad_site = self.driver.find_element(By.CLASS_NAME, 'ytp-flyout-cta-description-container').find_element(By.CLASS_NAME, 'ytp-ad-text').text
             print("ad_site : ", ad_site)
             value = self.driver.find_element(By.CLASS_NAME, 'ytp-ad-preview-slot').find_element(By.TAG_NAME, 'div').text
             if '재생' in value or '종료' in value:
@@ -248,20 +273,22 @@ class YouTubeBot:
                 time.sleep(int(ad_time) + random.uniform(1, 1.5))
                 value2 = self.driver.find_element(By.CLASS_NAME, 'ytp-ad-preview-slot').find_element(By.TAG_NAME, 'div').text
                 if '재생' in value2 or '종료' in value2:
-                    ad_site2 = self.driver.find_element(By.CLASS_NAME, 'ytp-ad-visit-advertiser-button').find_element(By.CLASS_NAME, 'ytp-ad-button-text').text
+                    # ad_site2 = self.driver.find_element(By.CLASS_NAME, 'ytp-ad-visit-advertiser-button').find_element(By.CLASS_NAME, 'ytp-ad-button-text').text
+                    ad_site2 = self.driver.find_element(By.CLASS_NAME, 'ytp-flyout-cta-description-container').find_element(By.CLASS_NAME, 'ytp-ad-text').text
                     print("ad_site2 : ", ad_site2)
                     ad_time = self.driver.find_element(By.CLASS_NAME, 'ytp-ad-duration-remaining').find_element(By.TAG_NAME, 'div').text.split('0:')[1]
                     time.sleep(int(ad_time))
                 else:
                     time.sleep(random.uniform(6, 6.3))
-                    ad_site2 = self.driver.find_element(By.CLASS_NAME, 'ytp-ad-visit-advertiser-button').find_element(By.CLASS_NAME, 'ytp-ad-button-text').text
+                    # ad_site2 = self.driver.find_element(By.CLASS_NAME, 'ytp-ad-visit-advertiser-button').find_element(By.CLASS_NAME, 'ytp-ad-button-text').text
+                    ad_site2 = self.driver.find_element(By.CLASS_NAME, 'ytp-flyout-cta-description-container').find_element(By.CLASS_NAME, 'ytp-ad-text').text
                     print("ad_site2c : ", ad_site2)
                     self.driver.find_element(By.CLASS_NAME, "ytp-ad-skip-button-container").click()
             else:
                 time.sleep(random.uniform(6, 6.3))
                 self.driver.find_element(By.CLASS_NAME, "ytp-ad-skip-button-container").click()
         except:
-            pass
+            time.sleep(1)
         return ad_site, ad_site2
     
     def record(self):
