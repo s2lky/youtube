@@ -30,7 +30,7 @@ class YouTubeBot:
         return Chrome(chrome_options)
 
     def get_random_persona(self):
-        df = pd.read_csv('/Users/a13/Documents/vsc_file/team07_with_company/data/persona_data.csv')
+        df = pd.read_csv('/usr/src/data/persona_data.csv')
         value = random.randint(0, (len(df) - 1))
         name = df.iloc[value]['페르소나 이름']
         keyword = random.choice((df.loc[value]['키워드']).split(", "))
@@ -381,7 +381,7 @@ class YouTubeBot:
                         'likes': like_list, 'url': url_list, 'first_ad': first_ad_list, 'second_ad': second_ad_list}
         df = pd.DataFrame(youtube_data)
         
-        df.to_csv('./youtube_bot_log.csv', index=False)
+        # df.to_csv('./youtube_bot_log.csv', index=False)
         
         return df
     
