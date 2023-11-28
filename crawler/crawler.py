@@ -23,14 +23,14 @@ class YouTubeBot:
         chrome_options = Options()
         ua = UserAgent()
         user_agent = ua.random
-        chrome_options.add_argument('--headless')
+        # chrome_options.add_argument('--headless')
         chrome_options.add_argument('--window-size=1080,1080')
         chrome_options.add_argument(f'user-agent={user_agent}')
         chrome_options.add_argument("--disable-gpu")
         return Chrome(chrome_options)
 
     def get_random_persona(self):
-        df = pd.read_csv('/usr/src/data/persona_data.csv')
+        df = pd.read_csv('/Users/a13/Documents/vsc_file/team07_with_company/data/persona_data.csv')
         value = random.randint(0, (len(df) - 1))
         name = df.iloc[value]['페르소나 이름']
         keyword = random.choice((df.loc[value]['키워드']).split(", "))
@@ -376,16 +376,16 @@ class YouTubeBot:
                 self.next_video()
                 
             
-        youtube_data = {'name': name_list, 'keyword': keyword_list, 'session': session, 'title': title_list, 'channel': channel_list, 
-                        'viewership': viewership_list, 'uploaded_date': uploaded_date_list, 'describe': describe_list, 
-                        'like': like_list, 'url': url_list, 'first_ad': first_ad_list, 'second_ad': second_ad_list}
+        youtube_data = {'persona': name_list, 'keyword': keyword_list, 'session': session, 'title': title_list, 'channel': channel_list, 
+                        'viewership': viewership_list, 'upload': uploaded_date_list, 'describe': describe_list, 
+                        'likes': like_list, 'url': url_list, 'first_ad': first_ad_list, 'second_ad': second_ad_list}
         df = pd.DataFrame(youtube_data)
         
-        df.to_csv('/usr/src/data/youtube_bot_log.csv', index=False)
+        df.to_csv('./youtube_bot_log.csv', index=False)
         
         return df
     
-    # @profile
+
     def run(self):
         try:
             result_df = self.record()  # Capture the returned DataFrame
