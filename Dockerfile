@@ -1,5 +1,5 @@
 # 기반이 되는 이미지
-FROM selenium/standalone-firefox:119.0-20231102
+FROM selenium/standalone-chrome:119.0-20231102
 
 RUN sudo chmod 777 usr/src
 
@@ -8,8 +8,6 @@ WORKDIR /usr/src
 
 # 필요한 파일을 복사
 COPY . .
-
-RUN sudo chmod +x ./start_tor.sh
 
 RUN sudo apt update
 
