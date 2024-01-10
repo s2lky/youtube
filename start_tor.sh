@@ -1,1 +1,1 @@
-nohup tor --ControlPort 9051 &
+sudo service tor start

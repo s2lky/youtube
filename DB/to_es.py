@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 import os
 from elasticsearch.exceptions import NotFoundError
 import json
+import traceback
+from datetime import datetime
 
 
 load_dotenv(verbose=True)
@@ -22,11 +24,11 @@ def data_insert(json_data, index_name, es):
 
 def youtube_data(df):
     json_data = df.to_json(orient='records', lines=True)
-    index_name = 'youtube'
+    index_name = 'youtube_with_nori'
     
     # Elasticsearch 클라이언트 생성
-    es = Elasticsearch(hosts=[{'host': es_host, 'port': es_port, 'scheme': 'http'}], http_auth=(es_user, es_password))
-    
+    es = Elasticsearch(hosts=[{'host': es_host, 'port': es_port, 'scheme': 'http'}], basic_auth=(es_user, es_password))
+
     try:
     # 기존 인덱스 확인
         es.indices.get(index=index_name)
@@ -34,39 +36,101 @@ def youtube_data(df):
     except NotFoundError:
         index_exists = False
 
-    if not index_exists:    
+    if not index_exists:
     # 인덱스 생성
         es.indices.create(index=index_name, body={
             "mappings": {
                 "properties": {
                     "@timestamp": {"type": "date"},
                     "channel": {"type": "keyword"},
-                    "describe": {"type": "text"},
                     "first_ad": {"type": "keyword"},
+                    "first_ad_name": {"type": "keyword"},
                     "second_ad": {"type": "keyword"},
+                    "second_ad_name": {"type": "keyword"},
+                    "first_break_ad": {"type": "keyword"},
+                    "first_break_ad_name": {"type": "keyword"},
+                    "second_break_ad": {"type": "keyword"},
+                    "second_break_ad_name": {"type": "keyword"},
                     "keyword": {"type": "keyword"},
                     "likes": {"type": "long"},
                     "persona": {"type": "keyword"},
                     "session": {"type": "long"},
-                    "title": {"type": "text"},
-                    "upload": {"type": "date", "format": "iso8601"},
+                    "describe": {"type": "text",
+                                 "analyzer": "nori_analyzer",
+                                 "fielddata": True},
+                                #  "fields": {"keyword": {"type": "keyword", "ignore_above": 2048}}},
+                    "title": {"type": "text",
+                              "analyzer": "nori_analyzer",
+                              "fielddata": True},
+                            #   "fields": {"keyword": {"type": "keyword", "ignore_above": 256}}},
+                    "upload": {"type": "date"},
                     "url": {"type": "keyword"},
                     "viewership": {"type": "long"}
                 }
-            }
-        }, ignore=400)
+            },
+            "settings": {
+                "analysis": {
+                    "filter": {
+                        "nori_posfilter": {
+                            "type": "nori_part_of_speech",
+                            "stoptags": [
+                            "E",
+                            "IC",
+                            "J",
+                            "MAG",
+                            "MAJ",
+                            "MM",
+                            "NA",
+                            "SC",
+                            "SE",
+                            "SF",
+                            "SN",
+                            "SP",
+                            "SSC",
+                            "SSO",
+                            "SY",
+                            "UNA",
+                            "VSV",
+                            "XPN",
+                            "XSA",
+                            "XSN",
+                            "XSV"
+                            ]
+                        }
+                        # "exclude_single_char": {
+                    #     "type": "length",
+                    #     "min": 5,
+                    #     "max": 20
+                    #     }
+                    },
+                    "tokenizer": {
+                        "nori_tokenizer": {
+                            "type": "nori_tokenizer"
+                            # "decompound_mode": "mixed"
+                        }
+                    },
+                    "analyzer": {
+                        "nori_analyzer": {
+                            "type": "nori",
+                            "tokenizer": "nori_tokenizer",
+                            "filter": ["nori_posfilter"]
+                            }
+                        }
+                    }
+                }
+            }, ignore=400)
 
     # JSON 데이터를 엘라스틱서치에 색인
     data_insert(json_data=json_data, index_name=index_name, es=es)
     # 클라이언트 종료
     es.transport.close()
 
-    
+
 def youtube_failed_log(df):
     json_data = df.to_json(orient='records', lines=True)
     index_name = 'logs'
-    es = Elasticsearch(hosts=[{'host': es_host, 'port': es_port, 'scheme': 'http'}], http_auth=(es_user, es_password))
-    
+    es = Elasticsearch(hosts=[{'host': es_host, 'port': es_port, 'scheme': 'http'}], basic_auth=(es_user, es_password))
+
     try:
     # 기존 인덱스 확인
         es.indices.get(index=index_name)
@@ -83,9 +147,9 @@ def youtube_failed_log(df):
                 }
             }
         }, ignore=400)
-        
+
     data_insert(json_data=json_data, index_name=index_name, es=es)
     es.transport.close()
-    
+
 if __name__ == "__main__":
     print(type(es_port))
